@@ -1,4 +1,3 @@
-
 # ======================
 # Project Configuration
 # ======================
@@ -20,7 +19,6 @@ SIZE        = arm-none-eabi-size
 SRC_DIR     = ../program
 OUT_DIR     = ../build
 BIN_DIR     = ../build/bin
-DEBUG_DIR   = $(OUT_DIR)/Debug
 
 STARTUP     = startup_stm32f401xx.s
 LINKER      = STM32F401XX_FLASH.ld
@@ -30,6 +28,7 @@ LINKER      = STM32F401XX_FLASH.ld
 # ======================
 CFLAGS  = -O2 -Wall -ffunction-sections -fdata-sections
 CFLAGS += -mcpu=$(MCU) -mthumb -mfpu=$(FPU) -mfloat-abi=$(FLOAT_ABI)
+CFLAGS += -MMD -MP     # auto-track header dependencies so edits to .h files trigger rebuilds
 
 LDFLAGS = -T$(LINKER)
 LDFLAGS += -Wl,--gc-sections -Wl,-Map=$(OUT_DIR)/$(TARGET).map
@@ -53,16 +52,16 @@ define rwildcard
 $(wildcard $(1)/*.c) $(foreach d,$(wildcard $(1)/*/),$(call rwildcard,$d))
 endef
 
-SRC := $(call rwildcard,$(DEBUG_DIR))
+# Compile directly from the source tree - no copy/sync step required.
+SRC := $(call rwildcard,$(SRC_DIR))
 SRC += system_init_stm32f4xx.c     #addition of system init from the scripts dir
 OBJ := $(SRC:.c=.o)
+DEP := $(OBJ:.o=.d)
 
 # ======================
 # Default Target
 # ======================
-all: $(OUT_DIR)/$(TARGET).hex
-	@mv $(OUT_DIR)/*.elf $(BIN_DIR)
-	@mv $(OUT_DIR)/*.hex $(BIN_DIR)
+all: $(BIN_DIR)/$(TARGET).hex
 	@echo "----------------------------------------------"
 	@echo "---- STM32 HEX Generated Successfully  ----"
 	@echo "------------- Made by eng-aly -------------"
@@ -90,7 +89,7 @@ build: src $(OBJ)
 # ======================
 # Link ELF
 # ======================
-$(OUT_DIR)/$(TARGET).elf: build
+$(BIN_DIR)/$(TARGET).elf: build
 	@echo "Linking ELF..."
 	$(CC) $(OBJ) $(STARTUP) $(LDFLAGS) -o $@
 	$(SIZE) $@
@@ -98,7 +97,7 @@ $(OUT_DIR)/$(TARGET).elf: build
 # ======================
 # Generate HEX
 # ======================
-$(OUT_DIR)/$(TARGET).hex: $(OUT_DIR)/$(TARGET).elf
+$(BIN_DIR)/$(TARGET).hex: $(BIN_DIR)/$(TARGET).elf
 	@echo "Generating HEX..."
 	$(OBJCOPY) -O ihex $< $@
 
@@ -107,14 +106,9 @@ $(OUT_DIR)/$(TARGET).hex: $(OUT_DIR)/$(TARGET).elf
 # ======================
 clean:
 	@rm -rf $(OUT_DIR)
+	@rm -f $(OBJ) $(DEP)
 	@echo "Build directory cleaned"
 
-# ======================
-# Sync (same idea as yours)
-# ======================
-sync: copy_dirs
-	@echo "Sources synced"
+-include $(DEP)
 
-copy_dirs:
-	@cp -r $(SRC_DIR) $(OUT_DIR)
-	@mv $(OUT_DIR)/program $(DEBUG_DIR)
+.PHONY: all clean src build
