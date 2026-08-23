@@ -40,4 +40,35 @@ The STM32F401CC uses a 12-bit successive approximation ADC (ADC1) to read analog
 - **Actual Address:** <mark>0x4002 0004</mark>
 - **Reset Value:** <mark>0x0000 0000</mark>
 - **Usage:** Sets <mark>OTYPER</mark> bits 1, 2, 3 to <mark>0</mark> to configure the LEDs in Push-Pull mode.
+----
+**Register Summary Table**
 
+| Register | Base Address | Offset | Full Address | Used For |
+|----------|--------------|--------|--------------|----------|
+| **RCC->AHB1ENR** | 0x40023800 | 0x30 | 0x40023830 | Enable GPIOB clock |
+| **RCC->APB2ENR** | 0x40023800 | 0x44 | 0x40023844 | Enable ADC1 clock |
+| **GPIOB->MODER** | 0x40020400 | 0x00 | 0x40020400 | Set LED pins as outputs |
+| **GPIOB->ODR** | 0x40020400 | 0x14 | 0x40020414 | Turn LEDs ON/OFF |
+| **ADC->CCR** | 0x40012000 | 0x300 | 0x40012300 | Set ADC prescaler |
+| **ADC1->CR2** | 0x40012000 | 0x08 | 0x40012008 | Enable ADC, start conversion |
+| **ADC1->SQR3** | 0x40012000 | 0x34 | 0x40012034 | Select ADC channel |
+| **ADC1->SMPR2** | 0x40012000 | 0x10 | 0x40012010 | Set sampling time |
+| **ADC1->SR** | 0x40012000 | 0x00 | 0x40012000 | Check conversion complete |
+| **ADC1->DR** | 0x40012000 | 0x4C | 0x4001204C | Read ADC value |
+
+**1. RCC->AHB1ENR (GPIO Clock Enable)**
+
+| Property | Value |
+|----------|-------|
+| **Base Address** | 0x40023800 |
+| **Offset** | 0x30 |
+| **Full Address** | 0x40023830 |
+| **Type** | Read/Write |
+| **Reset Value** | 0x00000000 |
+
+**Bit Configuration**
+
+| Bit | Name | Value | Description |
+|:---:|:---|:---:|:---|
+| 1 | **GPIOBEN** | **0** | GPIOB clock disabled |
+| 1 | **GPIOBEN** | **1** | **GPIOB clock enabled ← SET THIS!** |
